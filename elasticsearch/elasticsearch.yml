@@ -36,7 +36,7 @@ spec:
     spec:
       containers:
       - name: elasticsearch
-        image: docker.elastic.co/elasticsearch/elasticsearch:7.2.0
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.5.2
         resources:
             limits:
               cpu: 700m
@@ -52,19 +52,42 @@ spec:
         volumeMounts:
         - name: data
           mountPath: /usr/share/elasticsearch/data
+        - name: elastic-certificates
+          mountPath: /usr/share/elasticsearch/config/certs
+        - name: config
+          mountPath: /usr/share/elasticsearch/config/elasticsearch.yml
+          readOnly: true
+          subPath: elasticsearch.yml
         env:
-          - name: cluster.name
+          - name: CLUSTER_NAME
             value: k8s-logs
-          - name: node.name
+          - name: NODE_NAME
             valueFrom:
               fieldRef:
                 fieldPath: metadata.name
-          - name: discovery.seed_hosts
-            value: "es-cluster-0.elasticsearch"
-          - name: cluster.initial_master_nodes
+          - name: NODE_LIST
+            value: "es-cluster-0"
+          - name: CLUSTER_INITIAL
             value: "es-cluster-0"
           - name: ES_JAVA_OPTS
-            value: "-Xms400m -Xmx400m"
+            value: "-Xms256m -Xmx256m"
+          - name: ELASTIC_PASSWORD
+            valueFrom:
+                secretKeyRef:
+                  name: elastic-credentials
+                  key: password
+          - name: ELASTIC_USERNAME
+            valueFrom:
+                secretKeyRef:
+                  name: elastic-credentials
+                  key: username
+      volumes:
+        - name: elastic-certificates
+          secret:
+            secretName: elastic-certificates
+        - name: config
+          configMap:
+            name: elasticsearch-master-config
       initContainers:
       - name: fix-permissions
         image: busybox
@@ -94,4 +117,4 @@ spec:
       storageClassName: "local-storage"
       resources:
         requests:
-          storage: 2Gi
+          storage: 5Gi
