@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: kube-logging
+  name: kibana-config
+  labels:
+    app: elasticsearch
+    role: master
+data:
+  kibana.yml: |-
+    elasticsearch.hosts: ["https://elasticsearch:9200"]
+    server.ssl:
+      enabled: true
+      key: /usr/share/kibana/config/certs/elastic-certificate.pem
+      certificate: /usr/share/kibana/config/certs/elastic-certificate.pem
+    xpack.security.encryptionKey: ${KIBANA_ENCRYPTION_KEY}
+    elasticsearch.ssl:
+      certificateAuthorities: /usr/share/kibana/config/certs/elastic-certificate.pem
+      verificationMode: certificate
